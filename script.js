@@ -75,36 +75,33 @@ const displayMovements = function(movements) {
         containerMovements.insertAdjacentHTML('afterbegin', html);
     });
 };
-displayMovements(account1.movements);
 
 const calcDisplayBalance = function(movements) {
     const balance = movements
         .reduce((acc, mov) => acc + mov, 0);
     labelBalance.textContent = `${balance} €`;
 }
-calcDisplayBalance(account1.movements);
 
-const calcDisplaySummary = function (movements) {
-    const incomes = movements
+const calcDisplaySummary = function (acc) {
+    const incomes = acc.movements
         .filter(mov =>  mov > 0)
         .reduce((acc, mov) => acc + mov, 0);
     labelSumIn.textContent = `${incomes}€`;
 
-    const out = movements
+    const out = acc.movements
         .filter(mov => mov < 0)
         .reduce((acc, mov) => acc + mov, 0);
     labelSumOut.textContent = `${Math.abs(out)}€`;
 
-    const interest = movements
+    const interest = acc.movements
         .filter(mov =>  mov > 0)
-        .map(deposit => deposit * 1.2/100)
+        .map(deposit => deposit * acc.interestRate/100)
         .filter((int, i, arr) => {
             return int >= 1;
         })
         .reduce((acc, int) => acc + int, 0);
     labelSumInterest.textContent = `${interest}€`;
 };
-calcDisplaySummary(account1.movements);
 
 // Creating usernames for accounts with the name (initials)
 const createUsernames = function(accs) {
@@ -116,10 +113,38 @@ const createUsernames = function(accs) {
         .join('');
     });
 };
-
 createUsernames(accounts);
 
+// Login implementation
+// Event handler
+let currentAccount;
 
+btnLogin.addEventListener('click', function(e) {
+    // Prevent form from submitting
+    e.preventDefault();
+
+    currentAccount = accounts.find(acc => acc.username === inputLoginUsername.value);
+
+    if (currentAccount?.pin === Number(inputLoginPin.value)) {
+
+        // Display UI and a welcome message
+        labelWelcome.textContent = `Welcome back, ${currentAccount.owner.split(' ')[0]}`;
+        containerApp.style.opacity = 100;
+
+        // Clear inputs fields and clear focus on login pin input
+        inputLoginUsername.value = inputLoginPin.value = '';
+        inputLoginPin.blur();
+
+        // Display movements (transactions)
+        displayMovements(currentAccount.movements);
+
+        // Display Balance
+        calcDisplayBalance(currentAccount.movements);
+
+        // Display summary
+        calcDisplaySummary(currentAccount);
+    }
+ });
 
 
 
